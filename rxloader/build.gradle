@@ -1,103 +1,106 @@
 buildscript {
     repositories {
-        maven { url 'http://repo.springsource.org/plugins-release' }
+        maven { url 'http://repo.spring.io/plugins-release' }
     }
     dependencies {
-        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.1'
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.6'
     }
 }
 
 apply plugin: 'java'
 apply plugin: 'maven'
-apply plugin: 'signing'
+apply plugin: 'com.jfrog.bintray'
 
 apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
-apply plugin: 'propdeps-idea'
-apply plugin: 'propdeps-eclipse'
 
 repositories {
+    jcenter()
     mavenLocal()
 }
 
 dependencies {
-    compile 'com.netflix.rxjava:rxjava-android:0.18.4'
-    provided 'android:android:4.3_r2'
-    provided 'android.support:compatibility-v4:19.1.0'
+    compile 'com.netflix.rxjava:rxjava-core:0.19.6'
+    compile 'com.netflix.rxjava:rxjava-android:0.19.6'
+    provided 'android:android:4.4.2_r3'
+    provided 'android.support:compatibility-v4:20.0.0'
 }
 
 group = 'me.tatarka.rxloader'
-version = '1.0'
+version = new Version(currentVersion)
+status = version.status
 
-targetCompatibility=1.6
-sourceCompatibility=1.6
+ext.publish = true
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from 'build/docs/javadoc'
+configurations {
+    published
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
     classifier = 'sources'
 }
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
 
 artifacts {
-    archives jar
-    archives javadocJar
-    archives sourcesJar
+    published jar
+    published javadocJar
+    published sourcesJar
 }
 
-signing {
-    sign configurations.archives
+bintray {
+    apiUrl = bintrayApiUrl
+    user = bintrayUser
+    key = bintrayKey
+
+    configurations = ['published', 'archives']
+
+    dryRun = false //Whether to run this as dry-run, without deploying
+    publish = false //If version should be auto published after an upload
+    pkg {
+        repo = bintrayRepo
+        name = bintrayName
+        desc = 'Handles the activity lifecyle for rxjava\'s Observable'
+        websiteUrl = 'https://github.com/aivanyuk/rxloader'
+        issueTrackerUrl = 'https://github.com/aivanyuk/rxloader/issues'
+        vcsUrl = 'https://github.com/aivanyuk/rxloader.git'
+        licenses = ['Apache-2.0']
+        publicDownloadNumbers = true
+    }
 }
 
-if (project.hasProperty('sonatype.username') && project.hasProperty('sonatype.password'))
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                beforeDeployment { deployment -> signing.signPom(deployment) }
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
 
-                def repoUrl
-                if (project.version.endsWith("SNAPSHOT")) {
-                    repoUrl = "https://oss.sonatype.org/content/repositories/snapshots"
-                } else {
-                    repoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-                }
+import java.text.SimpleDateFormat
 
-                repository(url: repoUrl) {
-                    authentication(
-                            userName: project.getProperty('sonatype.username'),
-                            password: project.getProperty('sonatype.password'))
-                }
-
-                pom.project {
-                    name 'rxloader'
-                    packaging 'jar'
-                    description 'Handles the activity lifecyle for rxjava\'s Observable'
-                    url 'https://github.com/evant/rxloader'
-
-                    scm {
-                        url 'git@github.com:evant/rxloader.git'
-                        connection 'scm:git:git@github.com:evant/rxloader.git'
-                        developerConnection 'scm:git:git@github.com:evant/rxloader.git'
-                    }
-
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
-
-                    developers {
-                        developer {
-                            id 'evant'
-                            name 'Evan Tatarka'
-                        }
-                    }
-                }
-            }
+class Version {
+    String originalVersion
+    String thisVersion
+    String status
+    Date buildTime
+    Version(String versionValue) {
+        buildTime = new Date()
+        originalVersion = versionValue
+        if (originalVersion.endsWith('-SNAPSHOT')) {
+            status = 'integration'
+            thisVersion = originalVersion.substring(0, originalVersion.length() - 'SNAPSHOT'.length()) + getTimestamp()
+        } else {
+            status = 'release'
+            thisVersion = versionValue
         }
     }
+    String getTimestamp() {
+        // Convert local file timestamp to UTC
+        def format = new SimpleDateFormat('yyyyMMddHHmmss')
+        format.setCalendar(Calendar.getInstance(TimeZone.getTimeZone('UTC')));
+        return format.format(buildTime)
+    }
+    String toString() {
+        thisVersion
+    }
+}
