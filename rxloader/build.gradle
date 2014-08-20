@@ -9,10 +9,14 @@ buildscript {
 
 apply plugin: 'java'
 apply plugin: 'maven'
-apply plugin: 'com.jfrog.bintray'
+apply plugin: 'signing'
 
 apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
+
+
+targetCompatibility=JavaVersion.VERSION_1_6
+sourceCompatibility=JavaVersion.VERSION_1_6
 
 repositories {
     jcenter()
@@ -26,49 +30,62 @@ dependencies {
     provided 'android.support:compatibility-v4:20.0.0'
 }
 
-group = 'me.tatarka.rxloader'
+def groupId = 'me.tatarka.rxloader'
+def artifactId = 'rxloader'
 version = new Version(currentVersion)
 status = version.status
 
-ext.publish = true
+afterEvaluate { project ->
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                repository(url: "https://api.bintray.com/maven/aivanyuk/rxloader/rxloader") {
+                    authentication(userName: bintrayUser, password: bintrayKey)
+                }
+                pom.project {
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+                    developers {
+                        developer {
+                            name 'Artyom Ivanyuk'
+                            email 'ivanyuk.artyom@gmail.com'
+                            url 'https://github.com/aivanuk'
+                            roles {
+                                role 'admin'
+                                role 'developer'
+                            }
+                            timezone '+4'
+                        }
+                        developer {
+                            id 'evant'
+                            name 'Evan Tatarka'
+                        }
+                    }
+                }
+                pom.version = version
+                pom.groupId = groupId
+                pom.artifactId = artifactId
+            }
+        }
+    }
 
-configurations {
-    published
-}
+    signing {
+        required { gradle.taskGraph.hasTask("uploadArchives") }
+        sign configurations.archives
+    }
 
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allSource
-    classifier = 'sources'
-}
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allJava
+    }
 
-artifacts {
-    published jar
-    published javadocJar
-    published sourcesJar
-}
-
-bintray {
-    apiUrl = bintrayApiUrl
-    user = bintrayUser
-    key = bintrayKey
-
-    configurations = ['published', 'archives']
-
-    dryRun = false //Whether to run this as dry-run, without deploying
-    publish = false //If version should be auto published after an upload
-    pkg {
-        repo = bintrayRepo
-        name = bintrayName
-        desc = 'Handles the activity lifecyle for rxjava\'s Observable'
-        websiteUrl = 'https://github.com/aivanyuk/rxloader'
-        issueTrackerUrl = 'https://github.com/aivanyuk/rxloader/issues'
-        vcsUrl = 'https://github.com/aivanyuk/rxloader.git'
-        licenses = ['Apache-2.0']
-        publicDownloadNumbers = true
+    artifacts {
+        archives androidSourcesJar
     }
 }
 
