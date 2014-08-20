@@ -18,17 +18,14 @@ abstract class BaseRxLoader<T> {
         this.manager = manager;
         this.tag = tag;
         this.observer = observer;
-
-        CachingWeakRefSubscriber<T> subscription = manager.get(tag);
-        if (subscription != null) {
-            subscription.set(observer);
-        }
     }
 
     protected BaseRxLoader<T> start(Observable<T> observable) {
         CachingWeakRefSubscriber<T> subscriber = manager.get(tag);
         if (subscriber == null) {
             manager.put(tag, createSubscriber(observable));
+        } else {
+            subscriber.set(observer);
         }
         return this;
     }

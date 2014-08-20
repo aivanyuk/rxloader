@@ -12,7 +12,7 @@ import rx.Observer;
 
 /**
  * Persists the task by running it in a fragment with {@code setRetainInstanceState(true)}. This is
- * used internally by {@link me.tatarka.rxloader.RxLoaderManager}.
+ * used internally by {@link RxLoaderManager}.
  *
  * @author Evan Tatarka
  */
@@ -57,5 +57,15 @@ public class RxLoaderBackendFragment extends Fragment implements RxLoaderBackend
     @Override
     public void unsubscribeAll() {
         helper.unsubscribeAll();
+    }
+
+    @Override
+    public void remove(String tag) {
+        helper.remove(tag);
+    }
+
+    @Override
+    public void removeAll() {
+        helper.removeAll();
     }
 }

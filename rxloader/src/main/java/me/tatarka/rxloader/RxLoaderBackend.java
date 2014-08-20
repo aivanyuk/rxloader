@@ -15,4 +15,8 @@ interface RxLoaderBackend {
     <T> void setSave(String tag, Observer<T> observer, WeakReference<SaveCallback<T>> saveCallbackRef);
 
     void unsubscribeAll();
+
+    void remove(String tag);
+
+    void removeAll();
 }

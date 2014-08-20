@@ -89,6 +89,15 @@ class RxLoaderBackendFragmentHelper implements RxLoaderBackend {
         }
     }
 
+    @Override
+    public void remove(String tag) {
+        subscriptionMap.remove(tag);
+    }
+
+    public void removeAll() {
+        subscriptionMap.clear();
+    }
+
     private static class SaveItem<T> {
         final String tag;
         final WeakReference<SaveCallback<T>> saveCallbackRef;

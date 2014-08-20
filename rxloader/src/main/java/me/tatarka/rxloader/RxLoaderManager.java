@@ -1,10 +1,5 @@
 package me.tatarka.rxloader;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.Fragment;
-import android.os.Build;
-
 import rx.Observable;
 import rx.functions.Func1;
 import rx.functions.Func2;
@@ -28,59 +23,12 @@ public class RxLoaderManager {
 
     private final RxLoaderBackend manager;
 
-    /**
-     * Get an instance of the {@code RxLoaderManager} that is tied to the lifecycle of the given
-     * {@link android.app.Activity}. If you are using the support library, then you should use
-     * {@link me.tatarka.rxloader.RxLoaderManagerCompat#get(android.support.v4.app.FragmentActivity)}
-     * instead.
-     *
-     * @param activity the activity
-     * @return the {@code RxLoaderManager}
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static RxLoaderManager get(Activity activity) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            throw new UnsupportedOperationException("Method only valid in api 11 and above, use RxLoaderManagerCompat to support older versions (requires support library)");
-        }
-
-        RxLoaderBackendFragment fragment = (RxLoaderBackendFragment) activity.getFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-        if (fragment == null) {
-            fragment = new RxLoaderBackendFragment();
-            activity.getFragmentManager().beginTransaction().add(fragment, FRAGMENT_TAG).commit();
-        }
-        return new RxLoaderManager(fragment);
-    }
-
-    /**
-     * Get an instance of the {@code RxLoaderManager} that is tied to the lifecycle of the given
-     * {@link android.app.Fragment}. If you are using the support library, then you should use
-     * {@link me.tatarka.rxloader.RxLoaderManagerCompat#get(android.support.v4.app.Fragment)}}
-     * instead.
-     *
-     * @param fragment the fragment
-     * @return the {@code RxLoaderManager}
-     */
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
-    public static RxLoaderManager get(Fragment fragment) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            throw new UnsupportedOperationException("Method only valid in api 17 and above, use RxLoaderManagerCompat to support older versions (requires support library)");
-        }
-
-        RxLoaderBackendFragment manager = (RxLoaderBackendFragment) fragment.getChildFragmentManager().findFragmentByTag(FRAGMENT_TAG);
-
-        if (manager == null) {
-            manager = new RxLoaderBackendFragment();
-            fragment.getChildFragmentManager().beginTransaction().add(fragment, FRAGMENT_TAG).commit();
-        }
-        return new RxLoaderManager(manager);
-    }
-
     RxLoaderManager(RxLoaderBackend manager) {
         this.manager = manager;
     }
 
     /**
-     * Creates a new {@link me.tatarka.rxloader.RxLoader} that manages the given {@link
+     * Creates a new {@link RxLoader} that manages the given {@link
      * rx.Observable}. This should be called in {@link android.app.Activity#onCreate(android.os.Bundle)}
      * or similar.
      *
@@ -90,29 +38,29 @@ public class RxLoaderManager {
      * @param observer   the observer that receives the observable's callbacks
      * @param <T>        the observable's value type
      * @return a new {@code RxLoader}
-     * @see me.tatarka.rxloader.RxLoader
+     * @see RxLoader
      */
     public <T> RxLoader<T> create(String tag, Observable<T> observable, RxLoaderObserver<T> observer) {
         return new RxLoader<T>(manager, tag, observable, observer);
     }
 
     /**
-     * Creates a new {@link me.tatarka.rxloader.RxLoader} that manages the given {@link
-     * rx.Observable}. It uses the {@link me.tatarka.rxloader.RxLoaderManager#DEFAULT} tag. This
+     * Creates a new {@link RxLoader} that manages the given {@link
+     * rx.Observable}. It uses the {@link RxLoaderManager#DEFAULT} tag. This
      * should be called in {@link android.app.Activity#onCreate(android.os.Bundle)} or similar.
      *
      * @param observable the observable to manage
      * @param observer   the observer that receives the observable's callbacks
      * @param <T>        the observable's value type
      * @return a new {@code RxLoader}
-     * @see me.tatarka.rxloader.RxLoader
+     * @see RxLoader
      */
     public <T> RxLoader<T> create(Observable<T> observable, RxLoaderObserver<T> observer) {
         return new RxLoader<T>(manager, DEFAULT, observable, observer);
     }
 
     /**
-     * Creates a new {@link me.tatarka.rxloader.RxLoader1} that manages the given {@link
+     * Creates a new {@link RxLoader1} that manages the given {@link
      * rx.Observable}. This should be called in {@link android.app.Activity#onCreate(android.os.Bundle)}
      * or similar.
      *
@@ -123,15 +71,15 @@ public class RxLoaderManager {
      * @param <A>            the argument's type.
      * @param <T>            the observable's value type
      * @return a new {@code RxLoader}
-     * @see me.tatarka.rxloader.RxLoader1
+     * @see RxLoader1
      */
     public <A, T> RxLoader1<A, T> create(String tag, Func1<A, Observable<T>> observableFunc, RxLoaderObserver<T> observer) {
         return new RxLoader1<A, T>(manager, tag, observableFunc, observer);
     }
 
     /**
-     * Creates a new {@link me.tatarka.rxloader.RxLoader} that manages the given {@link
-     * rx.Observable}. It uses the {@link me.tatarka.rxloader.RxLoaderManager#DEFAULT} tag. This
+     * Creates a new {@link RxLoader} that manages the given {@link
+     * rx.Observable}. It uses the {@link RxLoaderManager#DEFAULT} tag. This
      * should be called in {@link android.app.Activity#onCreate(android.os.Bundle)} or similar.
      *
      * @param observableFunc the function that returns the observable to manage
@@ -139,14 +87,14 @@ public class RxLoaderManager {
      * @param <T>            the observable's value type
      * @param <A>            the argument's type.
      * @return a new {@code RxLoader}
-     * @see me.tatarka.rxloader.RxLoader
+     * @see RxLoader
      */
     public <A, T> RxLoader1<A, T> create(Func1<A, Observable<T>> observableFunc, RxLoaderObserver<T> observer) {
         return new RxLoader1<A, T>(manager, DEFAULT, observableFunc, observer);
     }
 
     /**
-     * Creates a new {@link me.tatarka.rxloader.RxLoader1} that manages the given {@link
+     * Creates a new {@link RxLoader1} that manages the given {@link
      * rx.Observable}. This should be called in {@link android.app.Activity#onCreate(android.os.Bundle)}
      * or similar.
      *
@@ -158,15 +106,15 @@ public class RxLoaderManager {
      * @param <A>            the fist argument's type.
      * @param <B>            the second argument's type.
      * @return a new {@code RxLoader}
-     * @see me.tatarka.rxloader.RxLoader1
+     * @see RxLoader1
      */
     public <A, B, T> RxLoader2<A, B, T> create(String tag, Func2<A, B, Observable<T>> observableFunc, RxLoaderObserver<T> observer) {
         return new RxLoader2<A, B, T>(manager, tag, observableFunc, observer);
     }
 
     /**
-     * Creates a new {@link me.tatarka.rxloader.RxLoader} that manages the given {@link
-     * rx.Observable}. It uses the {@link me.tatarka.rxloader.RxLoaderManager#DEFAULT} tag. This
+     * Creates a new {@link RxLoader} that manages the given {@link
+     * rx.Observable}. It uses the {@link RxLoaderManager#DEFAULT} tag. This
      * should be called in {@link android.app.Activity#onCreate(android.os.Bundle)} or similar.
      *
      * @param observableFunc the function that returns the observable to manage
@@ -175,14 +123,14 @@ public class RxLoaderManager {
      * @param <A>            the fist argument's type.
      * @param <B>            the second argument's type.
      * @return a new {@code RxLoader}
-     * @see me.tatarka.rxloader.RxLoader
+     * @see RxLoader
      */
     public <A, B, T> RxLoader2<A, B, T> create(Func2<A, B, Observable<T>> observableFunc, RxLoaderObserver<T> observer) {
         return new RxLoader2<A, B, T>(manager, DEFAULT, observableFunc, observer);
     }
 
     /**
-     * Returns if the {@code RxLoaderManager} contains a {@link me.tatarka.rxloader.RxLoader} with
+     * Returns if the {@code RxLoaderManager} contains a {@link RxLoader} with
      * the given tag.
      *
      * @param tag the loader's tag
@@ -197,5 +145,9 @@ public class RxLoaderManager {
      */
     public void unsubscribeAll() {
         manager.unsubscribeAll();
+    }
+
+    public void reset() {
+        manager.removeAll();
     }
 }
